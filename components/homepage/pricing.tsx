@@ -22,7 +22,7 @@ interface Price {
   id: string;
   priceAmount: number;
   priceCurrency: string;
-  recurringInterval: 'month' | 'year';
+  recurringInterval?: 'month' | 'year' | 'one-time' | null;
   productId?: string;
 }
 
@@ -121,12 +121,12 @@ const PricingCard = ({
   const currentPrice = prices.find(price =>
     isYearly
       ? price.recurringInterval === 'year'
-      : price.recurringInterval === 'month'
+      : price.recurringInterval === 'month' || price.recurringInterval === 'one-time' || !price.recurringInterval
   ) || prices[0];
 
   const priceAmount = currentPrice ? (currentPrice.priceAmount / 100).toFixed(2) : '0';
   const currency = currentPrice?.priceCurrency?.toUpperCase() || 'USD';
-  const interval = isYearly ? 'year' : 'month';
+  const interval = isYearly ? 'year' : (currentPrice?.recurringInterval === 'month' ? 'month' : '');
 
   const handleCheckout = async () => {
     if (!currentPrice) return;
@@ -169,7 +169,7 @@ const PricingCard = ({
           <span className="text-5xl font-bold tracking-tight">
             {currency === 'USD' ? '$' : currency} {priceAmount}
           </span>
-          <span className="text-lg text-muted-foreground">/{interval}</span>
+          {interval && <span className="text-lg text-muted-foreground">/{interval}</span>}
         </div>
 
         <div className="space-y-3">
@@ -215,13 +215,14 @@ export default function Pricing({ result }: PricingProps) {
   }, [result.items, isYearly]);
 
   // Filter products based on current interval selection
-  const filteredProducts = result.items.filter(item =>
-    item.prices?.some(price =>
-      isYearly
-        ? price.recurringInterval === 'year'
-        : price.recurringInterval === 'month'
-    )
-  );
+  const filteredProducts = result.items.filter(item => {
+    // If we're in yearly view, only show products with yearly prices
+    if (isYearly) {
+      return item.prices?.some(price => price.recurringInterval === 'year');
+    }
+    // In monthly view, show products with monthly prices OR one-time prices
+    return true; // Show all products in monthly view, including one-time purchases
+  });
 
   return (
     <section className="px-4 py-16">
