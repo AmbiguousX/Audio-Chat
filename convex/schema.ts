@@ -34,6 +34,7 @@ export default defineSchema({
         userId: v.string(),
         subscription: v.optional(v.string()),
         credits: v.optional(v.string()),
+        tokens: v.optional(v.number()), // Number of tokens the user has
         tokenIdentifier: v.string(),
     }).index("by_token", ["tokenIdentifier"]),
     subscriptions: defineTable({

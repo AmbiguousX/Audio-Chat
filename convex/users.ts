@@ -54,6 +54,7 @@ export const store = mutation({
             email: identity.email!,
             userId: identity.subject,
             tokenIdentifier: identity.subject,
+            tokens: 0, // Initialize with 0 tokens
             createdAt: new Date().toISOString(),
         });
     },

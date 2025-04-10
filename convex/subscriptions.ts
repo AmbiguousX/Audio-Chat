@@ -284,8 +284,50 @@ export const subscriptionStoreWebhook = mutation({
                 break;
 
             case 'order.created':
-                console.log("order.created:", args.body);
-                // Orders are handled through the subscription events
+            case 'order.paid':
+                console.log(`${eventType} event received:`, JSON.stringify(args.body, null, 2));
+
+                // For order.paid, we need to check the product name in a different way
+                let productName = '';
+                if (eventType === 'order.paid') {
+                    // For order.paid, the product name is in items[0].label
+                    productName = args.body.data.items?.[0]?.label?.toLowerCase() || '';
+                    console.log("Product label from items:", productName);
+                } else {
+                    // For order.created, the product name is directly in data
+                    productName = args.body.data.product_name?.toLowerCase() || '';
+                    console.log("Product name from data:", productName);
+                }
+
+                console.log("Metadata:", JSON.stringify(args.body.data.metadata, null, 2));
+                console.log("Is token purchase:", productName.includes('token') || productName.includes('audio token'));
+
+                if (productName.includes('token') || productName.includes('audio token')) {
+                    // This is a token purchase, process it
+                    try {
+                        // Extract token amount from product name (e.g., "1 Audio Token" -> 1)
+                        const tokenMatch = productName.match(/^(\d+)\s+/); // Match digits at start
+                        const tokenAmount = tokenMatch ? parseInt(tokenMatch[1], 10) : 1; // Default to 1 if not found
+                        console.log("Token amount extracted:", tokenAmount);
+
+                        // Check if we have the user's tokenIdentifier
+                        console.log("Has tokenIdentifier:", !!args.body.data.metadata?.tokenIdentifier);
+                        if (!args.body.data.metadata?.tokenIdentifier) {
+                            console.error('Missing tokenIdentifier in metadata for token purchase');
+                            break;
+                        }
+
+                        console.log("About to add token for user:", args.body.data.metadata.tokenIdentifier);
+                        // Add a token to the user
+                        const result = await ctx.runMutation(api.tokens.addToken, {
+                            tokenIdentifier: args.body.data.metadata.tokenIdentifier
+                        });
+
+                        console.log(`Added token for user ${args.body.data.metadata.tokenIdentifier}, result:`, JSON.stringify(result, null, 2));
+                    } catch (error) {
+                        console.error("Error processing token purchase:", error);
+                    }
+                }
                 break;
 
             default:
@@ -296,15 +338,23 @@ export const subscriptionStoreWebhook = mutation({
 });
 
 export const paymentWebhook = httpAction(async (ctx, request) => {
+    console.log("Payment webhook received");
 
     try {
         const body = await request.json();
-
+        console.log("Webhook body:", JSON.stringify({
+            type: body.type,
+            id: body.data?.id,
+            product: body.data?.product_name,
+            metadata: body.data?.metadata
+        }, null, 2));
 
         // track events and based on events store data
+        console.log("About to run subscriptionStoreWebhook mutation");
         await ctx.runMutation(api.subscriptions.subscriptionStoreWebhook, {
             body
         });
+        console.log("subscriptionStoreWebhook mutation completed");
 
         return new Response(JSON.stringify({ message: "Webhook received!" }), {
             status: 200,
