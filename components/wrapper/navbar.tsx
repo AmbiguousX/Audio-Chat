@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { Dialog } from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { Menu, Sparkles } from "lucide-react";
+import { Menu, Plus, Sparkles } from "lucide-react";
+import { useState } from "react";
+import RecordAudioModal from "../audio/record-audio-modal";
 import Link from "next/link";
 import * as React from "react";
 import ModeToggle from "../mode-toggle";
@@ -23,10 +25,16 @@ const components: { title: string; href: string; description: string }[] = [
     href: "/",
     description: "Return to the homepage.",
   },
+  {
+    title: "Posts",
+    href: "/posts",
+    description: "Browse audio posts.",
+  },
 ];
 
 export default function NavBar() {
   const { userId } = useAuth();
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
 
   return (
     <div
@@ -59,6 +67,14 @@ export default function NavBar() {
                       className="w-full justify-start text-base font-normal h-11 border border-muted/40 mb-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
                     >
                       Home
+                    </Button>
+                  </Link>
+                  <Link href="/posts" prefetch={true}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-base font-normal h-11 border border-muted/40 mb-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
+                    >
+                      Posts
                     </Button>
                   </Link>
                 </div>
@@ -102,11 +118,26 @@ export default function NavBar() {
           <Link href="/" prefetch={true}>
             <Button variant="ghost">Home</Button>
           </Link>
+          <Link href="/posts" prefetch={true}>
+            <Button variant="ghost">Posts</Button>
+          </Link>
         </div>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-          {userId && <TokenBalance />}
+          {userId && (
+            <>
+              <TokenBalance />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                onClick={() => setIsRecordModalOpen(true)}
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            </>
+          )}
           <ModeToggle />
           {!userId && (
             <Link href="/sign-in" prefetch={true}>
@@ -119,6 +150,12 @@ export default function NavBar() {
             </Link>
           )}
           {userId && <UserProfile />}
+
+          {/* Audio recording modal */}
+          <RecordAudioModal
+            isOpen={isRecordModalOpen}
+            onClose={() => setIsRecordModalOpen(false)}
+          />
         </div>
       </div>
     </div>

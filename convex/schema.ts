@@ -70,4 +70,15 @@ export default defineSchema({
         .index("type", ["type"])
         .index("polarEventId", ["polarEventId"]),
 
+    posts: defineTable({
+        title: v.string(),
+        audioUrl: v.string(), // Convex storage URL for the audio file
+        duration: v.number(), // Duration in seconds
+        createdAt: v.string(),
+        userId: v.string(), // User who created the post
+        userName: v.string(), // Name of the user who created the post
+        userImage: v.optional(v.string()), // Profile image of the user
+    })
+        .index("by_created_at", ["createdAt"]) // For sorting by newest
+        .index("by_user", ["userId"]), // For filtering by user
 })

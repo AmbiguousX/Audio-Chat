@@ -13,7 +13,9 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as audio from "../audio.js";
 import type * as http from "../http.js";
+import type * as posts from "../posts.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tokens from "../tokens.js";
 import type * as users from "../users.js";
@@ -27,7 +29,9 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  audio: typeof audio;
   http: typeof http;
+  posts: typeof posts;
   subscriptions: typeof subscriptions;
   tokens: typeof tokens;
   users: typeof users;
