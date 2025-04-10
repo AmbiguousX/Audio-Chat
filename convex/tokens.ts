@@ -24,10 +24,11 @@ export const getUserTokens = query({
   },
 });
 
-// Add a token to a user's account
+// Add tokens to a user's account
 export const addToken = mutation({
   args: {
     tokenIdentifier: v.string(),
+    quantity: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     console.log(`=== Adding token to user ${args.tokenIdentifier} ===`);
@@ -47,11 +48,14 @@ export const addToken = mutation({
         return { success: false, error: "User not found" };
       }
 
+      // Get the quantity of tokens to add (default to 1)
+      const quantity = args.quantity || 1;
+
       // Update the user's token balance
       const currentTokens = user.tokens || 0;
-      const newTokens = currentTokens + 1;
+      const newTokens = currentTokens + quantity;
 
-      console.log(`Updating user ${user._id} tokens from ${currentTokens} to ${newTokens}`);
+      console.log(`Updating user ${user._id} tokens from ${currentTokens} to ${newTokens} (adding ${quantity})`);
 
       await ctx.db.patch(user._id, {
         tokens: newTokens,

@@ -8,31 +8,31 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://finance3d.com/"),
+  metadataBase: new URL("https://audiochat.app/"),
   title: {
-    default: 'Finance3D',
-    template: `%s | Finance3D`
+    default: 'AudioChat',
+    template: `%s | AudioChat`
   },
   description:
-    "Finance3D - Advanced financial visualization and analysis platform",
+    "AudioChat - Share audio snippets with tokens",
   openGraph: {
     description:
-      "Finance3D - Advanced financial visualization and analysis platform",
+      "AudioChat - Share audio snippets with tokens",
     images: [
-      "https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7FjNDKYduLOG2QHWh3f5RgSi0c",
+      "/og-image.png",
     ],
-    url: "https://finance3d.com/",
+    url: "https://audiochat.app/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Finance3D",
+    title: "AudioChat",
     description:
-      "Finance3D - Advanced financial visualization and analysis platform",
+      "AudioChat - Share audio snippets with tokens",
     siteId: "",
-    creator: "@finance3d",
+    creator: "@audiochat",
     creatorId: "",
     images: [
-      "https://dwdwn8b5ye.ufs.sh/f/MD2AM9SEY8GucGJl7b5qyE7FjNDKYduLOG2QHWh3f5RgSi0c",
+      "/og-image.png",
     ],
   },
 };

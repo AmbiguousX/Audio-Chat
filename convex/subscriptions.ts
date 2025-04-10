@@ -12,12 +12,14 @@ const createCheckout = async ({
     customerEmail,
     priceId,
     successUrl,
-    metadata
+    metadata,
+    customAmount
 }: {
     customerEmail: string;
     priceId: string;
     successUrl: string;
     metadata?: Record<string, string>;
+    customAmount?: number;
 }) => {
     if (!process.env.POLAR_ACCESS_TOKEN) {
         throw new Error("POLAR_ACCESS_TOKEN is not configured");
@@ -43,12 +45,22 @@ const createCheckout = async ({
 
     console.log("Using success URL:", absoluteSuccessUrl);
 
-    const result = await polar.checkouts.custom.create({
+    // Create checkout options
+    const checkoutOptions: any = {
         productPriceId: priceId,
         successUrl: absoluteSuccessUrl,
         customerEmail,
         metadata,
-    });
+    };
+
+    // Add custom amount if provided
+    if (customAmount !== undefined) {
+        console.log(`Setting custom amount: ${customAmount} cents`);
+        checkoutOptions.amount = customAmount;
+    }
+
+    console.log("Creating checkout with options:", checkoutOptions);
+    const result = await polar.checkouts.custom.create(checkoutOptions);
 
     return result;
 };
@@ -56,6 +68,9 @@ const createCheckout = async ({
 export const getProOnboardingCheckoutUrl = action({
     args: {
         priceId: v.string(),
+        successUrl: v.optional(v.string()),
+        customAmount: v.optional(v.number()),
+        tokenQuantity: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
@@ -67,6 +82,7 @@ export const getProOnboardingCheckoutUrl = action({
             userId: identity.subject,
             userEmail: identity.email,
             tokenIdentifier: identity.subject,
+            tokenQuantity: args.tokenQuantity ? String(args.tokenQuantity) : "1", // Store token quantity in metadata
         };
 
         // Ensure we have a valid app URL
@@ -78,11 +94,14 @@ export const getProOnboardingCheckoutUrl = action({
             ? appUrl
             : 'http://localhost:3000';
 
+        console.log(`Creating checkout with priceId: ${args.priceId}, customAmount: ${args.customAmount}`);
+
         const checkout = await createCheckout({
             customerEmail: identity.email!,
             priceId: args.priceId,
-            successUrl: `${baseUrl}/success`,
-            metadata: metadata as Record<string, string>
+            successUrl: args.successUrl || baseUrl, // Use provided successUrl or default to baseUrl
+            metadata: metadata as Record<string, string>,
+            customAmount: args.customAmount // Pass the custom amount directly
         });
 
         return checkout.url;
@@ -318,9 +337,36 @@ export const subscriptionStoreWebhook = mutation({
                         }
 
                         console.log("About to add token for user:", args.body.data.metadata.tokenIdentifier);
-                        // Add a token to the user
+                        // Get token quantity from metadata or calculate from payment amount
+                        let tokenQuantity = 1;
+                        const paymentAmount = args.body.data.amount || 0;
+                        const paymentAmountDollars = paymentAmount / 100;
+
+                        // Log the full payment details for debugging
+                        console.log('Payment details:', {
+                            amount: paymentAmount,
+                            amountDollars: paymentAmountDollars,
+                            metadata: args.body.data.metadata,
+                            items: args.body.data.items
+                        });
+
+                        // First check if tokenQuantity is in metadata
+                        if (args.body.data.metadata?.tokenQuantity) {
+                            tokenQuantity = parseInt(args.body.data.metadata.tokenQuantity, 10);
+                            console.log(`Using token quantity from metadata: ${tokenQuantity}`);
+                        } else {
+                            // Otherwise calculate based on payment amount (1 token = $1)
+                            // Payment amount is in cents, so divide by 100 to get dollars
+                            tokenQuantity = Math.max(1, Math.round(paymentAmountDollars));
+                            console.log(`Calculated token quantity from payment amount: ${tokenQuantity}`);
+                        }
+
+                        console.log(`Adding ${tokenQuantity} tokens for payment of $${paymentAmountDollars.toFixed(2)}`);
+
+                        // Add tokens to the user
                         const result = await ctx.runMutation(api.tokens.addToken, {
-                            tokenIdentifier: args.body.data.metadata.tokenIdentifier
+                            tokenIdentifier: args.body.data.metadata.tokenIdentifier,
+                            quantity: tokenQuantity
                         });
 
                         console.log(`Added token for user ${args.body.data.metadata.tokenIdentifier}, result:`, JSON.stringify(result, null, 2));

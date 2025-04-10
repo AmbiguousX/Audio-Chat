@@ -1,20 +1,13 @@
 "use client";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@clerk/nextjs";
 import { Dialog } from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { Github, Menu, Sparkles, Twitter, Youtube } from "lucide-react";
+import { Menu, Sparkles } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import ModeToggle from "../mode-toggle";
+import TokenBalance from "../tokens/token-balance";
 import { Button } from "../ui/button";
 import {
   SheetContent,
@@ -26,19 +19,9 @@ import { UserProfile } from "../user-profile";
 
 const components: { title: string; href: string; description: string }[] = [
   {
-    title: "AI Playground",
-    href: "/playground",
-    description: "Interact with the AI in the playground.",
-  },
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    description: "Access your personal dashboard.",
-  },
-  {
-    title: "Blog",
-    href: "/blog",
-    description: "Read my interesting blog posts.",
+    title: "Home",
+    href: "/",
+    description: "Return to the homepage.",
   },
 ];
 
@@ -62,7 +45,7 @@ export default function NavBar() {
               <SheetHeader className="pb-6 border-b">
                 <SheetTitle className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-blue-600" />
-                  <span>Finance3D</span>
+                  <span>AudioChat</span>
                 </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-1 mt-6">
@@ -70,61 +53,23 @@ export default function NavBar() {
                   <h2 className="text-sm font-medium text-muted-foreground mb-2">
                     Navigation
                   </h2>
-                  {components.map((item) => (
-                    <Link key={item.href} href={item.href} prefetch={true}>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-base font-normal h-11 border border-muted/40 mb-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
-                      >
-                        {item.title}
-                      </Button>
-                    </Link>
-                  ))}
-                </div>
-
-                <div className="px-2 py-4 border-t">
-                  <h2 className="text-sm font-medium text-muted-foreground mb-2">
-                    Links
-                  </h2>
-                  <Link
-                    href="https://github.com/michaelshimeles/nextjs14-starter-template"
-                    target="_blank"
-                    prefetch={true}
-                  >
+                  <Link href="/" prefetch={true}>
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-base font-normal h-11 border border-muted/40 mb-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
                     >
-                      <Github className="h-4 w-4 mr-2" />
-                      GitHub
-                    </Button>
-                  </Link>
-                  <Link
-                    href="https://twitter.com/rasmickyy"
-                    target="_blank"
-                    prefetch={true}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-base font-normal h-11 border border-muted/40 mb-2 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <Twitter className="h-4 w-4 mr-2" />X (Twitter)
-                    </Button>
-                  </Link>
-                  <Link
-                    href="https://youtube.com/@rasmickyy"
-                    target="_blank"
-                    prefetch={true}
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-base font-normal h-11 border border-muted/40 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <Youtube className="h-4 w-4 mr-2" />
-                      YouTube
+                      Home
                     </Button>
                   </Link>
                 </div>
+
+                {userId && (
+                  <div className="px-2 py-4 border-t">
+                    <div className="flex justify-center mb-4">
+                      <TokenBalance />
+                    </div>
+                  </div>
+                )}
 
                 {!userId && (
                   <div className="px-2 py-4 border-t mt-auto">
@@ -140,7 +85,7 @@ export default function NavBar() {
           </Dialog>
           <Link href="/" prefetch={true} className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-blue-600" />
-            <span className="font-semibold">Finance3D</span>
+            <span className="font-semibold">AudioChat</span>
           </Link>
         </div>
 
@@ -148,51 +93,20 @@ export default function NavBar() {
         <div className="hidden lg:flex items-center gap-2">
           <Link href="/" prefetch={true} className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-blue-600" />
-            <span className="font-semibold">Finance3D</span>
+            <span className="font-semibold">AudioChat</span>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-6">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Resources</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    {components.map((component) => (
-                      <ListItem
-                        key={component.title}
-                        title={component.title}
-                        href={component.href}
-                      >
-                        {component.description}
-                      </ListItem>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-
-          <Link href="/dashboard" prefetch={true}>
-            <Button variant="ghost">Dashboard</Button>
-          </Link>
-          <Link href="/playground" prefetch={true}>
-            <Button variant="ghost">AI Playground</Button>
-          </Link>
-          <Link
-            href="https://github.com/michaelshimeles/nextjs14-starter-template"
-            prefetch={true}
-          >
-            <Button variant="ghost" size="icon">
-              <Github className="h-5 w-5" />
-            </Button>
+          <Link href="/" prefetch={true}>
+            <Button variant="ghost">Home</Button>
           </Link>
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {userId && <TokenBalance />}
           <ModeToggle />
           {!userId && (
             <Link href="/sign-in" prefetch={true}>
@@ -211,28 +125,4 @@ export default function NavBar() {
   );
 }
 
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";
+
